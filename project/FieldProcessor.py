@@ -2,7 +2,7 @@ from config import config
 class FieldProcessor(config):
 	def __init__(self):
 		config.__init__(self)
-		ifile = open(self.data_doc_file)
+		ifile = open(self.data_doc_file,encoding="utf8", errors='ignore')
 		ftypes = ['Discrete','Nominal','Ordinal','Continuous']
 		field_type_map = {}
 		for l in ifile:
