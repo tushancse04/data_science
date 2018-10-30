@@ -39,6 +39,7 @@ class Dataprocessor(config):
 			else:
 				break
 			print(max_score,c)
+
 		print(opt_c,max_score)
 
 
