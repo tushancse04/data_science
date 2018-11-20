@@ -1,0 +1,21 @@
+
+<html>
+<script src="jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+	data = ''
+	$( document ).ready(function() {
+	    $.get("http://127.0.0.1:5000/hello", function(data, status){
+	        console.log(data);
+	        console.log('found');
+	    });
+	});
+</script>
+<!DOCTYPE html>
+<body>
+
+<h1>My First Heading</h1>
+
+<p>My first paragraph.</p>
+
+</body>
+</html>

@@ -23,7 +23,8 @@ class Dataprocessor(config):
 			self.replace_column_by_binary_columns(df)
 		self.df = df
 		self.fp.set_fields(self.df)
-
+		#self.run_for_all_fields()
+		#return
 		#self.update_nan_values()
 		#self.df.to_csv(self.new_data_file, sep=',')
 		max_score = 0
@@ -42,6 +43,14 @@ class Dataprocessor(config):
 
 		print(opt_c,max_score)
 
+
+	def run_for_all_fields(self):
+		model = Regression()
+		c = [i for i in range(len(self.fp.fields))]
+		fields = self.fp.get_fields(c)
+		score = model.run(self.df,fields)
+		print('Score with all fields :',score)
+	
 
 
 	def get_opt_fields(self,prev_opt_flds,prev_opt_c):
