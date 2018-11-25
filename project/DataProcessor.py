@@ -9,7 +9,7 @@ from Regression import Regression
 import math
 import numpy
 
-class Dataprocessor(config):
+class DataProcessor(config):
 	def __init__(self):
 		config.__init__(self)
 		self.fp = FieldProcessor()

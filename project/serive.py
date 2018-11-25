@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask import request
 from config import config
 from flask import request
-from Dataprocessor import Dataprocessor
+from DataProcessor import DataProcessor
 
 class Service(config):
 	def __init__(self):
