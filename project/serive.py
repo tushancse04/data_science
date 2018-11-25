@@ -27,7 +27,7 @@ class Service(config):
 		def graphs():
 			models = request.args.get('models')
 			testSize = request.args.get('testSize')
-			dp = Dataprocessor()
+			dp = DataProcessor()
 			r = dp.regression_results(models,testSize)
 			return r
 
