@@ -1,8 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
+from flask import request
+from config import config
+from flask import request
+from Dataprocessor import Dataprocessor
 
-
-class Service:
+class Service(config):
 	def __init__(self):
 		app = Flask(__name__)
 		CORS(app)
@@ -15,6 +18,19 @@ class Service:
 		@app.route("/hello")
 		def hello():
 		  return "Hello, cross-origin-world!"
+
+		@app.route("/models")
+		def models():
+		  return 'LinearRegression\tLasso'
+
+		@app.route("/graphs")
+		def graphs():
+			models = request.args.get('models')
+			testSize = request.args.get('testSize')
+			dp = Dataprocessor()
+			r = dp.regression_results(models,testSize)
+			return r
+
 
 		app.run()
 

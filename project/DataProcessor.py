@@ -23,8 +23,7 @@ class Dataprocessor(config):
 			self.replace_column_by_binary_columns(df)
 		self.df = df
 		self.fp.set_fields(self.df)
-		#self.run_for_all_fields()
-		#return
+		return
 		#self.update_nan_values()
 		#self.df.to_csv(self.new_data_file, sep=',')
 		max_score = 0
@@ -44,12 +43,17 @@ class Dataprocessor(config):
 		print(opt_c,max_score)
 
 
+	def regression_results(self,models,testSize):
+		model = Regression()
+		c = [i for i in range(len(self.fp.fields))]
+		fields = self.fp.get_fields(c)
+		return model.get_data(self.df,fields,models,testSize)
+
 	def run_for_all_fields(self):
 		model = Regression()
 		c = [i for i in range(len(self.fp.fields))]
 		fields = self.fp.get_fields(c)
-		score = model.run(self.df,fields)
-		print('Score with all fields :',score)
+		score = model.get_data(self.df,fields,'Lasso',10)
 	
 
 
@@ -79,7 +83,6 @@ class Dataprocessor(config):
 				continue
 			if ftm[f] in ['Ordinal','Nominal']:
 				vals = df[f].unique()
-				print(f,vals)
 				for i,row in df.iterrows():
 					for j in range(len(vals)):
 						df.loc[i,f+'_'+str(j)] = (1 if row[f] == vals[j] else 0)
@@ -106,5 +109,3 @@ class Dataprocessor(config):
 				if pandas.isnull(row[f]):
 					self.df.loc[i,f] = 0
 
-
-dp = Dataprocessor()
