@@ -35,7 +35,9 @@ body {
 	vTime = 'yes';
 	vModels = 'Lasso';
 	vSize = '10';
-	data = ''
+	vScore = 'Yes';
+	result = '';
+	nst = '';
 
 	$( document ).ready(function() {
 		load_html();
@@ -53,6 +55,8 @@ body {
 	        for(i = 0; i<showTime.length;i++)
 	        	 $('<input type="radio" name="rbShowTime" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbTime');
 
+	        for(i = 0; i<showTime.length;i++)
+	        	 $('<input type="radio" name="rbShowScore" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbScore');
 	}
 
 	function load_models(){
@@ -63,6 +67,7 @@ body {
 				vModels += cb.attr('name').substring(2) + ',';
 			}
 		});
+
 		if(vModels.length > 0)
 			vModels = vModels.substring(0,vModels.length-1)
 	}
@@ -79,6 +84,21 @@ body {
 		});
 		if(vTime.length > 0)
 			vTime = vTime.substring(0,vTime.length-1)
+		console.log(vTime);
+	}
+
+	function load_score(){
+    	vScore = "";
+		$('input[type=radio]').each(function () {
+			cb = $(this);
+			if (cb.parent().attr('id') != 'cbScore')
+				return;
+			if(cb.is(':checked')){
+				vScore += cb.attr('id').substring(2) + ',';
+			}
+		});
+		if(vScore.length > 0)
+			vScore = vTime.substring(0,vTime.length-1)
 		console.log(vTime);
 	}
 
@@ -102,6 +122,7 @@ body {
 		load_models();
     	load_size();
     	load_time();
+    	load_score();
     	if(vModels.length == 0)
     		return
     	if(vTime.length == 0)
@@ -109,32 +130,46 @@ body {
     	if (vSize == 0)
     		return
 
+    	if (vScore == 0)
+    		return
+
     	url = base_url
 		url += "graphs?models=" + vModels
 		url += "&testSize=" + vSize
 		$.get(url, function(d, status){
-			data = JSON.parse(d);
-			showGraph();
+			result = JSON.parse(d);
+			showGraph('divValueComp',960,500,result['v']);
+			st = result['m'];
+			nst = [];
+			console.log(vScore + vTime);
+			if (vScore.indexOf('Y') > -1)
+				nst.push(st[0]);
+			if(vTime.indexOf('Y') > -1)
+				nst.push(st[1]);
+			if(nst.length == 0)
+				return;
+			showGraph('divSTComp',960,500,nst);
     	});
 	}
+
 	function cbchange_event_bind()
 	{
 	    $('#cbModels').click(function() {
-	    	console.log('model changed');
 	    	load_values();
 		});
 
 		$('#rbTestSize').click(function() {
-			console.log('size changed');
 	    	load_values();
 		});
 
 		$('#cbTime').click(function() {
-	    	console.log('Time changed');
 	    	load_values();
 		});
 
 
+		$('#cbScore').click(function() {
+	    	load_values();
+		});
 	}
 
 
@@ -144,10 +179,10 @@ body {
 
 
 
-	function showGraph(){
+	function showGraph(chart_div_name,width,height,data){
 		var margin = {top: 20, right: 20, bottom: 30, left: 40},
-	    width = 960 - margin.left - margin.right,
-	    height = 500 - margin.top - margin.bottom;
+	    width = 560 - margin.left - margin.right,
+	    height = 300 - margin.top - margin.bottom;
 
 		var x0 = d3.scale.ordinal()
 		    .rangeRoundBands([0, width], .1);
@@ -168,14 +203,15 @@ body {
 
 		var color = d3.scale.ordinal()
 		    .range(["#ca0020","#f4a582","#d5d5d5","#92c5de","#0571b0"]);
-		$('#cvgValueComp').remove();
-		var svg = d3.select('#divValueComp').append("svg")
+
+		svgid = 'svg' + chart_div_name;
+		$('#' + svgid).remove();
+		var svg = d3.select('#' + chart_div_name).append("svg")
 		    .attr("width", width + margin.left + margin.right)
-		    .attr("id", 'cvgValueComp')
+		    .attr("id", svgid)
 		    .attr("height", height + margin.top + margin.bottom)
 		  .append("g")
 		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
 
 
@@ -285,9 +321,28 @@ body {
 <!DOCTYPE html>
 <body>
 
-<div id="cbModels"></div>
-<div id="rbTestSize"></div>
-<div id="cbTime"></div>
+<div>
+	<H2>Choose models</H2>
+	<div id="cbModels"></div>
+</div>
+
+<div>
+	<H2>How many points you want to test?</H2>
+	<div id="rbTestSize"></div>
+</div>
+
+
+<div>
+	<H2>Show times?</H2>
+	<div id="cbTime"></div>
+</div>
+
+<div>
+	<H2>Show scores?</H2>
+	<div id="cbScore"></div>
+</div>
+
 <div id='divValueComp'></div>
+<div id='divSTComp'></div>
 </body>
 </html>

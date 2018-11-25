@@ -5,7 +5,7 @@ from sklearn.linear_model import Lasso,LassoLars,BayesianRidge
 import json
 import importlib
 from sklearn.cross_decomposition import PLSRegression
-
+import time
 
 
 class Regression(config):
@@ -20,15 +20,21 @@ class Regression(config):
 		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testSize/l, shuffle=True)
 		models = models.split(',')
 		results = {}
+		times = {}
+		scores = {}
 		for m in models:
+			s = time.time()
 			m = m.strip()
 			model = getattr(importlib.import_module("sklearn.linear_model"), m)()
 			model.fit(X_train,y_train)
 			p = model.predict(X_test.values)
 			results[m] = p
-			model.score(X_test,y_test)
+			scores[m] =  model.score(X_test,y_test)
+			times[m] = time.time() - s
 
-		r = []
+		rv = []
+		rm = []
+
 		for i in range(len(y_test.values)):
 			p = 'Point ' + str(i+1)
 			values = []
@@ -36,8 +42,20 @@ class Regression(config):
 			for j,m in enumerate(models):
 				m = m.strip()
 				values.append({'model':m,'value':results[m][i]})
-			r.append({'categorie':p,'values':values})
+			rv.append({'categorie':p,'values':values})
 
+		values_t = []
+		values_s = []
+		for m in models:
+			values_t.append({'model':m,'value':times[m]})
+			values_s.append({'model':m,'value':scores[m]})
+		rm.append({'categorie':'score','values':values_s})
+		rm.append({'categorie':'time','values':values_t})
+
+
+		r = {}
+		r['v'] = rv
+		r['m'] = rm
 		return json.dumps(r)
 
 	def run(self,df,fields):
