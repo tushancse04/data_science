@@ -189,8 +189,8 @@ body {
 			if(nst.length == 0)
 				return;
 			showGraph('divSTComp',560,300,nst);
-			pcadata = [];
-			loadPCAGraph(2);
+			if (pcadata.length == 0)
+				loadPCAGraph(2);
     	});
 	}
 
