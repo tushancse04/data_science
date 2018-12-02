@@ -4,6 +4,8 @@ from flask import request
 from config import config
 from flask import request
 from DataProcessor import DataProcessor
+from PCAWrapper import PCAWrapper
+
 
 class Service(config):
 	def __init__(self):
@@ -31,6 +33,11 @@ class Service(config):
 			r = dp.regression_results(models,testSize)
 			return r
 
+		@app.route("/pca")
+		def pca():
+			comp_no = int(request.args.get('comp_no'))
+			p = PCAWrapper()
+			return p.pca_results(comp_no)
 
 		app.run()
 

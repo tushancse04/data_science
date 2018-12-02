@@ -5,6 +5,9 @@
 
 body {
   font: 10px sans-serif;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 .axis path,
@@ -17,17 +20,17 @@ body {
 .x.axis path {
   display: none;
 }
-
+.bar { fill: steelblue; }
 </style>
 
 
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
 <script src="jquery-3.3.1.min.js"></script>
-<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 
 <script type="text/javascript">
-	models = 'LinearRegression,Lasso,Ridge,ElasticNet,LassoLars';
-	testsizes = [5,10,15];
+	models = 'LinearRegression,Lasso,Ridge,ElasticNet,LassoLars,PCA';
+	testsizes = [5,10,15,20,25,30];
 	showTime = ['Yes','No']
 	cb = '';
 	base_url = 'http://127.0.0.1:5000/'
@@ -36,8 +39,11 @@ body {
 	vModels = 'Lasso';
 	vSize = '10';
 	vScore = 'Yes';
+	vError = 'Yes';
 	result = '';
 	nst = '';
+	pcadata = [];
+	dd = '';
 
 	$( document ).ready(function() {
 		load_html();
@@ -55,8 +61,16 @@ body {
 	        for(i = 0; i<showTime.length;i++)
 	        	 $('<input type="radio" name="rbShowTime" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbTime');
 
+	        
+	       	for(i = 0; i<showTime.length;i++)
+	        	 $('<input type="radio" name="rbShowError" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbError');
+
 	        for(i = 0; i<showTime.length;i++)
 	        	 $('<input type="radio" name="rbShowScore" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbScore');
+	        $( ".fa-refresh" ).click(function() {
+	        	pcadata = [];
+	        	loadPCAGraph(2);
+	        });
 	}
 
 	function load_models(){
@@ -84,7 +98,7 @@ body {
 		});
 		if(vTime.length > 0)
 			vTime = vTime.substring(0,vTime.length-1)
-		console.log(vTime);
+
 	}
 
 	function load_score(){
@@ -98,8 +112,24 @@ body {
 			}
 		});
 		if(vScore.length > 0)
-			vScore = vTime.substring(0,vTime.length-1)
-		console.log(vTime);
+			vScore = vScore.substring(0,vScore.length-1)
+
+	}
+
+	function load_error(){
+		vError = "";
+		$('input[type=radio]').each(function () {
+			cb = $(this);
+	
+			if (cb.parent().attr('id') != 'cbError')
+				return;
+
+			if(cb.is(':checked')){
+				vError += cb.attr('id').substring(2) + ',';
+			}
+		});
+		if(vError.length > 0)
+			vError = vError.substring(0,vError.length-1)
 	}
 
 	function load_size(){
@@ -108,14 +138,15 @@ body {
 			cb = $(this);
 			if (cb.parent().attr('id') != 'rbTestSize')
 				return;
+
 			if(cb.is(':checked')){
 				vSize += cb.attr('id').substring(2) + ',';
 			}
 		});
 		if(vSize.length > 0)
 			vSize = vSize.substring(0,vSize.length-1)
-		console.log(vSize);
 	}
+
 
 
 	function load_values(){
@@ -123,15 +154,22 @@ body {
     	load_size();
     	load_time();
     	load_score();
+    	load_error();
     	if(vModels.length == 0)
     		return
+
     	if(vTime.length == 0)
     		return
-    	if (vSize == 0)
+
+    	if (vSize.length == 0)
     		return
 
-    	if (vScore == 0)
+    	if (vScore.length == 0)
     		return
+
+    	if (vError.length == 0)
+    		return
+    	    	console.log('here');
 
     	url = base_url
 		url += "graphs?models=" + vModels
@@ -141,14 +179,18 @@ body {
 			showGraph('divValueComp',960,500,result['v']);
 			st = result['m'];
 			nst = [];
-			console.log(vScore + vTime);
+	
 			if (vScore.indexOf('Y') > -1)
 				nst.push(st[0]);
 			if(vTime.indexOf('Y') > -1)
 				nst.push(st[1]);
+			if(vTime.indexOf('Y') > -1)
+				nst.push(st[2]);
 			if(nst.length == 0)
 				return;
-			showGraph('divSTComp',960,500,nst);
+			showGraph('divSTComp',560,300,nst);
+			pcadata = [];
+			loadPCAGraph(2);
     	});
 	}
 
@@ -170,7 +212,123 @@ body {
 		$('#cbScore').click(function() {
 	    	load_values();
 		});
+
+		$('#cbError').click(function() {
+	    	load_values();
+		});
 	}
+
+
+
+
+
+
+	function loadPCAGraph(i){
+    	url = base_url;
+		url += "pca?comp_no=" + i;
+		$.get(url, function(d, status){
+			d = JSON.parse(d)[0];
+			dd = d;
+			pcadata.push(d);
+			console.log(d);
+			showPCAGraphs();
+			if(i<50)
+			{
+				i++;
+				loadPCAGraph(i);
+			}
+
+    	});
+	}
+
+
+
+
+	function showPCAGraphs(){
+		var margin = {top: 20, right: 20, bottom: 70, left: 40},
+		    width = 600 - margin.left - margin.right,
+		    height = 300 - margin.top - margin.bottom;
+
+
+		// set the ranges
+		var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+		var y = d3.scale.linear().range([height, 0]);
+
+		// define the axis
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+		    .orient("bottom")
+
+
+		var yAxis = d3.svg.axis()
+		    .scale(y)
+		    .orient("left")
+		    .ticks(10);
+
+		div_id = 'divPCA';  
+		svgid = 'svg' + div_id;
+		$('#' + svgid).remove();
+		var svg = d3.select("#" + div_id).append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("id", svgid)
+		    .attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+		    .attr("transform", 
+		          "translate(" + margin.left + "," + margin.top + ")");
+
+			data = pcadata;
+
+		    data.forEach(function(d) {
+		        d.component = d.component;
+		        d.score = +d.score;
+		    });
+			
+		  // scale the range of the data
+		  x.domain(data.map(function(d) { return d.component; }));
+		  y.domain([0, d3.max(data, function(d) { return d.score; })]);
+
+		  // add axis
+		  svg.append("g")
+		      .attr("class", "x axis")
+		      .attr("transform", "translate(0," + height + ")")
+		      .call(xAxis)
+		    .selectAll("text")
+		      .style("text-anchor", "end")
+		      .attr("dx", "-.8em")
+		      .attr("dy", "-.55em")
+		      .attr("transform", "rotate(-90)" );
+
+		  svg.append("g")
+		      .attr("class", "y axis")
+		      .call(yAxis)
+		    .append("text")
+		      .attr("transform", "rotate(-90)")
+		      .attr("y", 5)
+		      .attr("dy", ".71em")
+		      .style("text-anchor", "end")
+		      .text("Score");
+
+
+		  // Add bar chart
+		  svg.selectAll("bar")
+		      .data(data)
+		    .enter().append("rect")
+		      .attr("class", "bar")
+		      .attr("x", function(d) { return x(d.component); })
+		      .attr("width", x.rangeBand())
+		      .attr("y", function(d) { return y(d.score); })
+		      .attr("height", function(d) { return height - y(d.score); });
+
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -181,8 +339,8 @@ body {
 
 	function showGraph(chart_div_name,width,height,data){
 		var margin = {top: 20, right: 20, bottom: 30, left: 40},
-	    width = 560 - margin.left - margin.right,
-	    height = 300 - margin.top - margin.bottom;
+	    width = width - margin.left - margin.right,
+	    height = height - margin.top - margin.bottom;
 
 		var x0 = d3.scale.ordinal()
 		    .rangeRoundBands([0, width], .1);
@@ -278,13 +436,13 @@ body {
 		      .style("opacity","0");
 
 		  legend.append("rect")
-		      .attr("x", width - 18)
+		      .attr("x", width)
 		      .attr("width", 18)
 		      .attr("height", 18)
 		      .style("fill", function(d) { return color(d); });
 
 		  legend.append("text")
-		      .attr("x", width - 24)
+		      .attr("x", width - 6)
 		      .attr("y", 9)
 		      .attr("dy", ".35em")
 		      .style("text-anchor", "end")
@@ -341,8 +499,23 @@ body {
 	<H2>Show scores?</H2>
 	<div id="cbScore"></div>
 </div>
+<div>
+	<H2>Show mean squared error?</H2>
+	<div id="cbError"></div>
+</div>
+<div>
+	<H1>Value comparison for different models</H1>
+	<div id='divValueComp'></div>
+</div>
+<div>
+	<H1>Time and score comparison for models</H1>
+	<div id='divSTComp'></div>
+</div>
 
-<div id='divValueComp'></div>
-<div id='divSTComp'></div>
+<div>
+	<H1>PCA score for different component</H1>
+	<i class="fa fa-refresh"></i>
+	<div id='divPCA'></div>
+</div>
 </body>
 </html>
