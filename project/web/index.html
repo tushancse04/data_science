@@ -43,6 +43,7 @@ body {
 	result = '';
 	nst = '';
 	pcadata = [];
+	comp_lim = 50;
 	dd = '';
 
 	$( document ).ready(function() {
@@ -67,10 +68,31 @@ body {
 
 	        for(i = 0; i<showTime.length;i++)
 	        	 $('<input type="radio" name="rbShowScore" id="rb' + showTime[i] + '">'  + showTime[i] + '</input>').appendTo('#cbScore');
-	        $( ".fa-refresh" ).click(function() {
+	        $( "#refPCA" ).click(function() {
 	        	pcadata = [];
 	        	loadPCAGraph(2);
 	        });
+
+		    $( "#refScore" ).click(function() {
+	        	url = base_url
+				url += "graphs?models=" + vModels
+				url += "&testSize=" + vSize
+				$.get(url, function(d, status){
+					result = JSON.parse(d);
+					st = result['m'];
+					nst = [];
+			
+					if (vScore.indexOf('Y') > -1)
+						nst.push(st[0]);
+					if(vTime.indexOf('Y') > -1)
+						nst.push(st[1]);
+					if(vTime.indexOf('Y') > -1)
+						nst.push(st[2]);
+					if(nst.length == 0)
+						return;
+					showGraph('divSTComp',560,300,nst);
+		    	});
+	        });        
 	}
 
 	function load_models(){
@@ -232,7 +254,7 @@ body {
 			pcadata.push(d);
 			console.log(d);
 			showPCAGraphs();
-			if(i<50)
+			if(i<comp_lim)
 			{
 				i++;
 				loadPCAGraph(i);
@@ -504,17 +526,18 @@ body {
 	<div id="cbError"></div>
 </div>
 <div>
-	<H1>Value comparison for different models</H1>
+	<H1>Actual sales price vs predicted sales price comparison for different models</H1>
 	<div id='divValueComp'></div>
 </div>
 <div>
-	<H1>Time and score comparison for models</H1>
+	<H1>Time, score, error comparison for models</H1>
+	<i id='refScore' class="fa fa-refresh"></i>
 	<div id='divSTComp'></div>
 </div>
 
 <div>
 	<H1>PCA score for different component</H1>
-	<i class="fa fa-refresh"></i>
+	<i id='refPCA' class="fa fa-refresh"></i>
 	<div id='divPCA'></div>
 </div>
 </body>

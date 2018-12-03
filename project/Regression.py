@@ -39,7 +39,7 @@ class Regression(config):
 		X = pd.concat([X_train,X_test])
 		y = pd.concat([y_train,y_test])
 
-		pca_p,pca_score,pca_time = self.pca_results(2,X,y,test_size)
+		pca_p,pca_score,pca_time = self.pca_results(30,X,y,test_size)
 		models = models.split(',')
 		results = {}
 		times = {}
